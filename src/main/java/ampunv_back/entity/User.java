@@ -1,6 +1,5 @@
 package ampunv_back.entity;
 
-import ampunv_back.dto.ImageUploadResponse;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -24,8 +23,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "city_id", nullable = false)
-    private Integer cityId;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "city_id", nullable = false)
+    private City city;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -50,15 +50,14 @@ public class User {
 
     public User() {}
 
-    public User(String firstname, String lastname, String email, String password, Integer cityId) {
+    public User(String firstname, String lastname, String email, String password, City city) {
         this.firstname = firstname;
         this.lastname = lastname;
         this.email = email;
         this.password = password;
-        this.cityId = cityId;
+        this.city = city;
     }
 
-    // Getters et Setters
     public Long getId() {
         return id;
     }
@@ -99,12 +98,16 @@ public class User {
         this.password = password;
     }
 
-    public Integer getCityId() {
-        return cityId;
+    public City getCity() {
+        return city;
     }
 
-    public void setCityId(Integer cityId) {
-        this.cityId = cityId;
+    public void setCity(City city) {
+        this.city = city;
+    }
+
+    public Integer getCityId() {
+        return city != null ? city.getId() : null;
     }
 
     public UserRole getRole() {
@@ -121,9 +124,6 @@ public class User {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
-    }
-
-    public ImageUploadResponse getCity() {
     }
 
     public enum UserRole {

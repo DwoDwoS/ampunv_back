@@ -2,7 +2,9 @@ package ampunv_back.service;
 
 import ampunv_back.dto.RegisterRequest;
 import ampunv_back.dto.UserDTO;
+import ampunv_back.entity.City;
 import ampunv_back.entity.User;
+import ampunv_back.repository.CityRepository;
 import ampunv_back.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,6 +20,9 @@ public class UserService {
     private UserRepository userRepository;
 
     @Autowired
+    private CityRepository cityRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     public User createUser(RegisterRequest request) {
@@ -25,12 +30,15 @@ public class UserService {
             throw new IllegalArgumentException("Cet email est déjà utilisé");
         }
 
+        City city = cityRepository.findById((Integer) request.getCityId())
+                .orElseThrow(() -> new IllegalArgumentException("Ville introuvable avec l'ID : " + request.getCityId()));
+
         User user = new User();
         user.setFirstname(request.getFirstname());
         user.setLastname((String) request.getLastname());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setCityId((Integer) request.getCityId());
+        user.setCity(city);
         user.setRole(User.UserRole.SELLER);
 
         return userRepository.save(user);
