@@ -1,10 +1,12 @@
 package ampunv_back.dto;
 
 public class PublicUserDTO {
-    private final Long id;
-    private final String displayName;
-    private final String cityName;
-    private final String memberSince;
+    private Long id;
+    private String displayName;
+    private String cityName;
+    private String memberSince;
+
+    public PublicUserDTO() {}
 
     public PublicUserDTO(Long id, String firstname, String lastname, String cityName, String memberSince) {
         this.id = id;
@@ -13,10 +15,18 @@ public class PublicUserDTO {
         this.memberSince = memberSince;
     }
 
-    public Long getId() { return id; }
-    public String getDisplayName() { return displayName; }
-    public String getCityName() { return cityName; }
-    public String getMemberSince() { return memberSince; }
+    public Long getId() {
+        return id;
+    }
+    public String getDisplayName() {
+        return displayName;
+    }
+    public String getCityName() {
+        return cityName;
+    }
+    public String getMemberSince() {
+        return memberSince;
+    }
 
     public void setId(Long id) {
     }

@@ -35,16 +35,12 @@ public class UserController {
         return ResponseEntity.ok(dto);
     }
 
-    @GetMapping("/me")
+    @GetMapping("/myprofile")
     public ResponseEntity<UserDTO> getMyProfile(Authentication authentication) {
         String email = authentication.getName();
         User user = userService.findByEmail(email);
 
-        UserDTO dto = new UserDTO();
-        dto.setId(user.getId());
-        dto.setFirstname(user.getFirstname());
-        dto.setLastname(user.getLastname());
-        dto.setEmail(user.getEmail());
+        UserDTO dto = userService.convertToDTO(user);
 
         return ResponseEntity.ok(dto);
     }
@@ -54,11 +50,7 @@ public class UserController {
     public ResponseEntity<UserDTO> getUserProfile(@PathVariable Long id) {
         User user = userService.findById(id);
 
-        UserDTO dto = new UserDTO();
-        dto.setId(user.getId());
-        dto.setFirstname(user.getFirstname());
-        dto.setLastname(user.getLastname());
-        dto.setEmail(user.getEmail());
+        UserDTO dto = userService.convertToDTO(user);
 
         return ResponseEntity.ok(dto);
     }
