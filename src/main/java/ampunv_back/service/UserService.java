@@ -27,10 +27,10 @@ public class UserService {
 
         User user = new User();
         user.setFirstname(request.getFirstname());
-        user.setLastname(request.getLastname());
+        user.setLastname((String) request.getLastname());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setCityId(request.getCityId());
+        user.setCityId((Integer) request.getCityId());
         user.setRole(User.UserRole.SELLER);
 
         return userRepository.save(user);

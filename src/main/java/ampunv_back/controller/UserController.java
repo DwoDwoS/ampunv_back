@@ -1,11 +1,13 @@
 package ampunv_back.controller;
 
 import ampunv_back.dto.PublicUserDTO;
+import ampunv_back.dto.UserDTO;
 import ampunv_back.entity.User;
 import ampunv_back.service.DataMaskingService;
 import ampunv_back.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
