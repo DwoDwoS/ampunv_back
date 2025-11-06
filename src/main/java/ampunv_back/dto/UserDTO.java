@@ -25,7 +25,6 @@ public class UserDTO {
         this.updatedAt = updatedAt;
     }
 
-    // Getters et Setters
     public Long getId() {
         return id;
     }
