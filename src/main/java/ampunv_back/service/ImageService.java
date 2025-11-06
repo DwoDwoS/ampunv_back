@@ -30,8 +30,8 @@ public class ImageService {
     @Value("${cloudinary.folder}")
     private String folder;
 
-    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-    private static final int MAX_IMAGES_PER_FURNITURE = 10;
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
+    private static final int MAX_IMAGES_PER_FURNITURE = 5;
     private static final List<String> ALLOWED_MIME_TYPES = List.of(
             "image/jpeg", "image/jpg", "image/png", "image/webp"
     );
