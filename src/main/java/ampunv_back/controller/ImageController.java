@@ -6,6 +6,7 @@ import ampunv_back.service.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,10 +25,12 @@ public class ImageController {
     public ResponseEntity<?> uploadImage(
             @RequestParam("file") MultipartFile file,
             @RequestParam("furniture_id") Long furnitureId,
-            @RequestParam(value = "alt_text", required = false) String altText
+            @RequestParam(value = "alt_text", required = false) String altText,
+            Authentication authentication
     ) {
         try {
-            Image image = imageService.uploadImage(file, furnitureId, altText);
+            String sellerEmail = authentication.getName();
+            Image image = imageService.uploadImage(file, furnitureId, altText, sellerEmail);
 
             ImageUploadResponse response = new ImageUploadResponse(
                     image.getId(),
@@ -65,10 +68,12 @@ public class ImageController {
     @PutMapping("/{imageId}/set-primary")
     public ResponseEntity<String> setPrimaryImage(
             @PathVariable Long imageId,
-            @RequestParam("furniture_id") Long furnitureId
+            @RequestParam("furniture_id") Long furnitureId,
+            Authentication authentication
     ) {
         try {
-            imageService.setPrimaryImage(imageId, furnitureId);
+            String sellerEmail = authentication.getName();
+            imageService.setPrimaryImage(imageId, furnitureId, sellerEmail);
             return ResponseEntity.ok("Image définie comme principale");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -76,9 +81,13 @@ public class ImageController {
     }
 
     @DeleteMapping("/{imageId}")
-    public ResponseEntity<String> deleteImage(@PathVariable Long imageId) {
+    public ResponseEntity<String> deleteImage(
+            @PathVariable Long imageId,
+            Authentication authentication
+    ) {
         try {
-            imageService.deleteImage(imageId);
+            String sellerEmail = authentication.getName();
+            imageService.deleteImage(imageId, sellerEmail);
             return ResponseEntity.ok("Image supprimée avec succès");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
