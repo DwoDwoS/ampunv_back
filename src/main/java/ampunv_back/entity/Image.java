@@ -14,6 +14,9 @@ public class Image {
     @Column(nullable = false, length = 500)
     private String url;
 
+    @Column(name = "public_id", nullable = false, length = 255)
+    private String publicId;
+
     @Column(nullable = false)
     private String name;
 
@@ -60,8 +63,9 @@ public class Image {
 
     public Image() {}
 
-    public Image(String url, String name, Long furnitureId) {
+    public Image(String url, String publicId, String name, Long furnitureId) {
         this.url = url;
+        this.publicId = publicId;
         this.name = name;
         this.furnitureId = furnitureId;
     }
@@ -155,10 +159,19 @@ public class Image {
     }
 
     public LocalDateTime getCreatedAt() {
+
         return createdAt;
     }
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public String getPublicId() {
+        return publicId;
+    }
+
+    public void setPublicId(String publicId) {
+        this.publicId = publicId;
     }
 }

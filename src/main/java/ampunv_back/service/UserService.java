@@ -1,0 +1,85 @@
+package ampunv_back.service;
+
+import ampunv_back.dto.RegisterRequest;
+import ampunv_back.dto.UserDTO;
+import ampunv_back.entity.City;
+import ampunv_back.entity.User;
+import ampunv_back.repository.CityRepository;
+import ampunv_back.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private CityRepository cityRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    public User createUser(RegisterRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Cet email est déjà utilisé");
+        }
+
+        City city = cityRepository.findById((Integer) request.getCityId())
+                .orElseThrow(() -> new IllegalArgumentException("Ville introuvable avec l'ID : " + request.getCityId()));
+
+        User user = new User();
+        user.setFirstname(request.getFirstname());
+        user.setLastname((String) request.getLastname());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setCity(city);
+        user.setRole(User.UserRole.SELLER);
+
+        return userRepository.save(user);
+    }
+
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé avec l'email : " + email));
+    }
+
+    public User findById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé avec l'ID : " + id));
+    }
+
+    public void promoteToAdmin(Long userId) {
+        User user = findById(userId);
+        user.setRole(User.UserRole.ADMIN);
+        userRepository.save(user);
+    }
+
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public UserDTO convertToDTO(User user) {
+        return new UserDTO(
+                user.getId(),
+                user.getFirstname(),
+                user.getLastname(),
+                user.getEmail(),
+                user.getCityId(),
+                user.getRole().name(),
+                user.getCreatedAt(),
+                user.getUpdatedAt()
+        );
+    }
+
+    public boolean emailExists(String email) {
+        return userRepository.existsByEmail(email);
+    }
+}

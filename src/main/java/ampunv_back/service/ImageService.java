@@ -1,6 +1,8 @@
 package ampunv_back.service;
 
+import ampunv_back.entity.Furniture;
 import ampunv_back.entity.Image;
+import ampunv_back.repository.FurnitureRepository;
 import ampunv_back.repository.ImageRepository;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
@@ -22,10 +24,19 @@ public class ImageService {
     @Autowired
     private ImageRepository imageRepository;
 
+    @Autowired
+    private FurnitureRepository furnitureRepository;
+
     @Value("${cloudinary.folder}")
     private String folder;
 
-    public Image uploadImage(MultipartFile file, Long furnitureId, String altText) throws IOException {
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
+    private static final int MAX_IMAGES_PER_FURNITURE = 5;
+    private static final List<String> ALLOWED_MIME_TYPES = List.of(
+            "image/jpeg", "image/jpg", "image/png", "image/webp"
+    );
+
+    public Image uploadImage(MultipartFile file, Long furnitureId, String altText, String sellerEmail) throws IOException {
 
         if (file.isEmpty()) {
             throw new IllegalArgumentException("Le fichier est vide");
@@ -34,6 +45,13 @@ public class ImageService {
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             throw new IllegalArgumentException("Le fichier doit être une image");
+        }
+
+        Furniture furniture = furnitureRepository.findById(furnitureId)
+                .orElseThrow(() -> new IllegalArgumentException("Meuble non trouvé"));
+
+        if (!furniture.getSeller().getEmail().equals(sellerEmail)) {
+            throw new IllegalArgumentException("Vous n'êtes pas autorisé à uploader des images pour ce meuble");
         }
 
         Map uploadResult = cloudinary.uploader().upload(
@@ -49,6 +67,7 @@ public class ImageService {
         );
 
         String url = (String) uploadResult.get("secure_url");
+        String publicId = (String) uploadResult.get("public_id");
         Integer width = (Integer) uploadResult.get("width");
         Integer height = (Integer) uploadResult.get("height");
         Long bytes = ((Number) uploadResult.get("bytes")).longValue();
@@ -57,6 +76,7 @@ public class ImageService {
 
         Image image = new Image();
         image.setUrl(url);
+        image.setPublicId(publicId);
         image.setName(file.getOriginalFilename());
         image.setAltText(altText);
         image.setFurnitureId(furnitureId);
@@ -79,7 +99,14 @@ public class ImageService {
                 .orElse(null);
     }
 
-    public void setPrimaryImage(Long imageId, Long furnitureId) {
+    public void setPrimaryImage(Long imageId, Long furnitureId, String sellerEmail) {
+        Furniture furniture = furnitureRepository.findById(furnitureId)
+                .orElseThrow(() -> new IllegalArgumentException("Meuble non trouvé"));
+
+        if (!furniture.getSeller().getEmail().equals(sellerEmail)) {
+            throw new IllegalArgumentException("Vous n'êtes pas autorisé à modifier ce meuble");
+        }
+
         List<Image> images = imageRepository.findByFurnitureIdOrderByDisplayOrderAsc(furnitureId);
         images.forEach(img -> {
             img.setIsPrimary(false);
@@ -89,26 +116,29 @@ public class ImageService {
         Image image = imageRepository.findById(imageId)
                 .orElseThrow(() -> new IllegalArgumentException("Image non trouvée"));
 
+        if (!image.getFurnitureId().equals(furnitureId)) {
+            throw new IllegalArgumentException("Cette image n'appartient pas à ce meuble");
+        }
+
         image.setIsPrimary(true);
         imageRepository.save(image);
     }
 
-    public void deleteImage(Long imageId) throws IOException {
+    public void deleteImage(Long imageId, String sellerEmail) throws IOException {
         Image image = imageRepository.findById(imageId)
                 .orElseThrow(() -> new IllegalArgumentException("Image non trouvée"));
-        String url = image.getUrl();
-        String publicId = extractPublicIdFromUrl(url);
-        cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
-        imageRepository.delete(image);
-    }
 
-    private String extractPublicIdFromUrl(String url) {
-        String[] parts = url.split("/upload/");
-        if (parts.length == 2) {
-            String afterUpload = parts[1];
-            String withoutVersion = afterUpload.substring(afterUpload.indexOf("/") + 1);
-            return withoutVersion.substring(0, withoutVersion.lastIndexOf("."));
+        Furniture furniture = furnitureRepository.findById(image.getFurnitureId())
+                .orElseThrow(() -> new IllegalArgumentException("Meuble non trouvé"));
+
+        if (!furniture.getSeller().getEmail().equals(sellerEmail)) {
+            throw new IllegalArgumentException("Vous n'êtes pas autorisé à supprimer cette image");
         }
-        throw new IllegalArgumentException("URL Cloudinary invalide");
+        try {
+            cloudinary.uploader().destroy(image.getPublicId(), ObjectUtils.emptyMap());
+        } catch (Exception e) {
+            System.err.println("Erreur Cloudinary lors de la suppression : " + e.getMessage());
+        }
+        imageRepository.delete(image);
     }
 }
