@@ -57,7 +57,7 @@ public class FurnitureService {
         User seller = userRepository.findByEmail(sellerEmail)
                 .orElseThrow(() -> new IllegalArgumentException("Vendeur non trouvé"));
 
-        return furnitureRepository.findBySellerId(seller.getId()).stream()
+        return furnitureRepository.findBySeller_Id(seller.getId()).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

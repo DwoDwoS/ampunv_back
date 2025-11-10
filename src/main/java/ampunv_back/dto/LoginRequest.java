@@ -19,7 +19,6 @@ public class LoginRequest {
         this.password = password;
     }
 
-    // Getters et Setters
     public String getEmail() {
         return email;
     }
