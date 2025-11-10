@@ -22,7 +22,6 @@ public class CityService {
                 .orElseThrow(() -> new IllegalArgumentException("Ville introuvable avec l'ID : " + id));
     }
 
-
     public City findByName(String name) {
         return cityRepository.findByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Ville introuvable : " + name));
