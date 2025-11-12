@@ -1,10 +1,14 @@
 package ampunv_back.security;
 
 import ampunv_back.service.JwtService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +22,8 @@ import java.io.IOException;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     @Autowired
     private JwtService jwtService;
@@ -42,7 +48,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         jwt = authHeader.substring(7);
-        userEmail = jwtService.extractEmail(jwt);
+
+        try {
+            userEmail = jwtService.extractEmail(jwt);
+        } catch (ExpiredJwtException e) {
+            log.info("JWT expired for request {}: {}", request.getRequestURI(), e.getMessage());
+            filterChain.doFilter(request, response);
+            return;
+        } catch (JwtException | IllegalArgumentException e) {
+            log.warn("Invalid JWT for request {}: {}", request.getRequestURI(), e.getMessage());
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
