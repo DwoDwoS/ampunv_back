@@ -86,7 +86,6 @@ public class AuthController {
                     user.getLastname(),
                     user.getRole().name()
             );
-
             return ResponseEntity.ok(response);
 
         } catch (AuthenticationException e) {

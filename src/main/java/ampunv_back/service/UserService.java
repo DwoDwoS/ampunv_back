@@ -82,4 +82,17 @@ public class UserService {
     public boolean emailExists(String email) {
         return userRepository.existsByEmail(email);
     }
+
+    public void demoteToSeller(Long userId) {
+        User user = findById(userId);
+        if (user.getRole() == User.UserRole.ADMIN) {
+            long adminCount = userRepository.countByRole(User.UserRole.ADMIN);
+            if (adminCount <= 1) {
+                throw new IllegalArgumentException("Impossible de rétrograder le dernier administrateur");
+            }
+        }
+
+        user.setRole(User.UserRole.SELLER);
+        userRepository.save(user);
+    }
 }

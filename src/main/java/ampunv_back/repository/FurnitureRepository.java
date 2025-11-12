@@ -11,7 +11,7 @@ import java.util.List;
 
 @Repository
 public interface FurnitureRepository extends JpaRepository<Furniture, Long> {
-    List<Furniture> findBySellerId(Long sellerId);
+    List<Furniture> findBySeller_Id(Long sellerId);
     List<Furniture> findByStatus(FurnitureStatus status);
     List<Furniture> findByCityId(Integer cityId);
     List<Furniture> findByFurnitureTypeId(Integer furnitureTypeId);
@@ -19,5 +19,5 @@ public interface FurnitureRepository extends JpaRepository<Furniture, Long> {
     @Query("SELECT f FROM Furniture f WHERE LOWER(f.title) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<Furniture> searchByTitle(@Param("keyword") String keyword);
     List<Furniture> findByStatusAndCityId(FurnitureStatus status, Integer cityId);
-    long countBySellerId(Long sellerId);
+    long countBySeller_Id(Long sellerId);
 }
