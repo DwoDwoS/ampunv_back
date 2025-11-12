@@ -1,6 +1,8 @@
 package ampunv_back.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Type;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -28,7 +30,8 @@ public class User {
     private City city;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Type(value = ampunv_back.config.UserRoleType.class)
+    @Column(nullable = false, columnDefinition = "user_role")
     private UserRole role = UserRole.SELLER;
 
     @Column(name = "created_at", nullable = false, updatable = false)
