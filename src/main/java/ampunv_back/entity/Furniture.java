@@ -1,6 +1,9 @@
 package ampunv_back.entity;
 
+import ampunv_back.config.PostgreSQLEnumType;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Type;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -21,7 +24,7 @@ public class Furniture {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Column(name = "furniture_type_id", nullable = false)
+    @Column(name = "type_id", nullable = false)
     private Integer furnitureTypeId;
 
     @Column(name = "material_id")
@@ -36,9 +39,30 @@ public class Furniture {
     @Column(nullable = false)
     private String condition;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private FurnitureStatus status = FurnitureStatus.AVAILABLE;
+    @Column(name = "length_cm", precision = 10, scale = 2)
+    private BigDecimal lengthCm;
+
+    @Column(name = "width_cm", precision = 10, scale = 2)
+    private BigDecimal widthCm;
+
+    @Column(name = "height_cm", precision = 10, scale = 2)
+    private BigDecimal heightCm;
+
+    @Column(name = "weight_kg", precision = 10, scale = 2)
+    private BigDecimal weightKg;
+
+    @Type(PostgreSQLEnumType.class)
+    @Column(name = "status", nullable = false, columnDefinition = "furniture_status DEFAULT 'PENDING'")
+    private FurnitureStatus status = FurnitureStatus.PENDING;
+
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
+    @Column(name = "validated_by")
+    private Long validatedBy;
+
+    @Column(name = "validated_at")
+    private LocalDateTime validatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id", nullable = false)
@@ -142,12 +166,68 @@ public class Furniture {
         this.condition = condition;
     }
 
+    public BigDecimal getLengthCm() {
+        return lengthCm;
+    }
+
+    public void setLengthCm(BigDecimal lengthCm) {
+        this.lengthCm = lengthCm;
+    }
+
+    public BigDecimal getWidthCm() {
+        return widthCm;
+    }
+
+    public void setWidthCm(BigDecimal widthCm) {
+        this.widthCm = widthCm;
+    }
+
+    public BigDecimal getHeightCm() {
+        return heightCm;
+    }
+
+    public void setHeightCm(BigDecimal heightCm) {
+        this.heightCm = heightCm;
+    }
+
+    public BigDecimal getWeightKg() {
+        return weightKg;
+    }
+
+    public void setWeightKg(BigDecimal weightKg) {
+        this.weightKg = weightKg;
+    }
+
     public FurnitureStatus getStatus() {
         return status;
     }
 
     public void setStatus(FurnitureStatus status) {
         this.status = status;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
+    }
+
+    public Long getValidatedBy() {
+        return validatedBy;
+    }
+
+    public void setValidatedBy(Long validatedBy) {
+        this.validatedBy = validatedBy;
+    }
+
+    public LocalDateTime getValidatedAt() {
+        return validatedAt;
+    }
+
+    public void setValidatedAt(LocalDateTime validatedAt) {
+        this.validatedAt = validatedAt;
     }
 
     public User getSeller() {
@@ -171,8 +251,9 @@ public class Furniture {
     }
 
     public enum FurnitureStatus {
-        AVAILABLE,
-        RESERVED,
+        PENDING,
+        APPROVED,
+        REJECTED,
         SOLD
     }
 }

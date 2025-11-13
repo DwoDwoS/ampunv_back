@@ -2,6 +2,7 @@ package ampunv_back.config;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 
 import java.io.Serializable;
@@ -10,8 +11,21 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Objects;
+import java.util.Properties;
 
-public class PostgreSQLEnumType implements UserType<Enum> {
+public class PostgreSQLEnumType implements UserType<Enum>, DynamicParameterizedType {
+
+    private Class<? extends Enum> enumClass;
+
+    @Override
+    public void setParameterValues(Properties parameters) {
+        if (parameters != null) {
+            ParameterType reader = (ParameterType) parameters.get(PARAMETER_TYPE);
+            if (reader != null) {
+                enumClass = reader.getReturnedClass().asSubclass(Enum.class);
+            }
+        }
+    }
 
     @Override
     public int getSqlType() {
@@ -20,7 +34,7 @@ public class PostgreSQLEnumType implements UserType<Enum> {
 
     @Override
     public Class<Enum> returnedClass() {
-        return Enum.class;
+        return (Class<Enum>) enumClass;
     }
 
     @Override
@@ -40,7 +54,16 @@ public class PostgreSQLEnumType implements UserType<Enum> {
         if (rs.wasNull() || columnValue == null) {
             return null;
         }
-        return columnValue != null ? Enum.valueOf(returnedClass(), columnValue) : null;
+
+        if (enumClass == null) {
+            throw new HibernateException("Enum class not set for PostgreSQLEnumType");
+        }
+
+        try {
+            return Enum.valueOf(enumClass, columnValue);
+        } catch (IllegalArgumentException e) {
+            throw new HibernateException("Error converting value '" + columnValue + "' to enum " + enumClass.getName(), e);
+        }
     }
 
     @Override
