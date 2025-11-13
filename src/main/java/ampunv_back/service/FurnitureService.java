@@ -36,14 +36,14 @@ public class FurnitureService {
         furniture.setColorId(request.getColorId());
         furniture.setCityId(request.getCityId());
         furniture.setCondition(request.getCondition());
-        furniture.setStatus(FurnitureStatus.AVAILABLE);
+        furniture.setStatus(FurnitureStatus.PENDING);
         furniture.setSeller(seller);
 
         return furnitureRepository.save(furniture);
     }
 
     public List<FurnitureDTO> getAllAvailableFurnitures() {
-        return furnitureRepository.findByStatus(FurnitureStatus.AVAILABLE).stream()
+        return furnitureRepository.findByStatus(FurnitureStatus.PENDING).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
