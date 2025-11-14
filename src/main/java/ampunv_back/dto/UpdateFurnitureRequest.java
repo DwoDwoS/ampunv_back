@@ -27,7 +27,7 @@ public class UpdateFurnitureRequest {
             message = "État invalide")
     private String condition;
 
-    @Pattern(regexp = "^(AVAILABLE|RESERVED|SOLD)$", message = "Statut invalide")
+    @Pattern(regexp = "^(PENDING|APPROVED|REJECTED|SOLD)$", message = "Statut invalide")
     private String status;
 
     public UpdateFurnitureRequest() {}
