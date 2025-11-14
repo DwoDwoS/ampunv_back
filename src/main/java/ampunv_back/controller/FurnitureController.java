@@ -9,10 +9,12 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/furnitures")
@@ -92,5 +94,47 @@ public class FurnitureController {
     public ResponseEntity<List<FurnitureDTO>> searchFurnitures(@RequestParam String keyword) {
         List<FurnitureDTO> furnitures = furnitureService.searchFurnitures(keyword);
         return ResponseEntity.ok(furnitures);
+    }
+
+    @PutMapping("/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> approveFurniture(@PathVariable Long id) {
+        try {
+            Furniture furniture = furnitureService.findById(id);
+            UpdateFurnitureRequest updateRequest = new UpdateFurnitureRequest();
+            updateRequest.setStatus("AVAILABLE");
+
+            Furniture updated = furnitureService.updateFurnitureAsAdmin(id, updateRequest);
+            FurnitureDTO dto = furnitureService.convertToDTO(updated);
+
+            return ResponseEntity.ok(dto);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> rejectFurniture(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body
+    ) {
+        try {
+            String reason = body.get("reason");
+            if (reason == null || reason.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Reason is required"));
+            }
+            Furniture furniture = furnitureService.findById(id);
+            furnitureService.deleteFurnitureAsAdmin(id);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Furniture rejected successfully",
+                    "reason", reason
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 }

@@ -136,4 +136,17 @@ public class FurnitureService {
                 furniture.getUpdatedAt()
         );
     }
+    public Furniture updateFurnitureAsAdmin(Long id, UpdateFurnitureRequest request) {
+        Furniture furniture = findById(id);
+        if (request.getStatus() != null) {
+            furniture.setStatus(Furniture.FurnitureStatus.valueOf(request.getStatus()));
+        }
+
+        return furnitureRepository.save(furniture);
+    }
+
+    public void deleteFurnitureAsAdmin(Long id) {
+        Furniture furniture = findById(id);
+        furnitureRepository.delete(furniture);
+    }
 }
