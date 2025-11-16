@@ -19,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpMethod;
 
 import java.util.Arrays;
 
@@ -48,6 +49,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/furniture-types/**", "/api/materials/**", "/api/colors/**").permitAll()
 
                         .requestMatchers("/api/furnitures/my-furnitures", "/api/furnitures/create").hasAnyRole("SELLER", "ADMIN")
+
+                        .requestMatchers(HttpMethod.PUT, "/api/furnitures/**").hasAnyRole("SELLER", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/furnitures/**").hasAnyRole("SELLER", "ADMIN")
+
                         .requestMatchers("/api/images/upload").hasAnyRole("SELLER", "ADMIN")
 
                         .requestMatchers("/api/admin/**", "/api/users/**").hasRole("ADMIN")

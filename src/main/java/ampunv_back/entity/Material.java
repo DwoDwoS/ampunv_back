@@ -3,7 +3,7 @@ package ampunv_back.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "materials")
+@Table(name = "furniture_materials")
 public class Material {
 
     @Id

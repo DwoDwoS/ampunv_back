@@ -5,9 +5,13 @@ import ampunv_back.dto.FurnitureDTO;
 import ampunv_back.dto.UpdateFurnitureRequest;
 import ampunv_back.entity.Furniture;
 import ampunv_back.entity.Furniture.FurnitureStatus;
+import ampunv_back.entity.FurnitureType;
+import ampunv_back.entity.Image;
 import ampunv_back.entity.User;
 import ampunv_back.repository.FurnitureRepository;
 import ampunv_back.repository.UserRepository;
+import ampunv_back.repository.ImageRepository;
+import ampunv_back.repository.FurnitureTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +27,12 @@ public class FurnitureService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ImageRepository imageRepository;
+
+    @Autowired
+    private FurnitureTypeRepository furnitureTypeRepository;
+
     public Furniture createFurniture(CreateFurnitureRequest request, String sellerEmail) {
         User seller = userRepository.findByEmail(sellerEmail)
                 .orElseThrow(() -> new IllegalArgumentException("Vendeur non trouvé"));
@@ -36,14 +46,15 @@ public class FurnitureService {
         furniture.setColorId(request.getColorId());
         furniture.setCityId(request.getCityId());
         furniture.setCondition(request.getCondition());
-        furniture.setStatus(FurnitureStatus.AVAILABLE);
+        furniture.setStatus(FurnitureStatus.PENDING);
         furniture.setSeller(seller);
 
         return furnitureRepository.save(furniture);
     }
 
     public List<FurnitureDTO> getAllAvailableFurnitures() {
-        return furnitureRepository.findByStatus(FurnitureStatus.AVAILABLE).stream()
+        return furnitureRepository.findByStatus(FurnitureStatus.APPROVED)
+                .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -57,7 +68,8 @@ public class FurnitureService {
         User seller = userRepository.findByEmail(sellerEmail)
                 .orElseThrow(() -> new IllegalArgumentException("Vendeur non trouvé"));
 
-        return furnitureRepository.findBySeller_Id(seller.getId()).stream()
+        return furnitureRepository.findBySeller_Id(seller.getId())
+                .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -68,33 +80,16 @@ public class FurnitureService {
         if (!furniture.getSeller().getEmail().equals(sellerEmail)) {
             throw new IllegalArgumentException("Vous n'êtes pas autorisé à modifier ce meuble");
         }
-        if (request.getTitle() != null) {
-            furniture.setTitle(request.getTitle());
-        }
-        if (request.getDescription() != null) {
-            furniture.setDescription(request.getDescription());
-        }
-        if (request.getPrice() != null) {
-            furniture.setPrice(request.getPrice());
-        }
-        if (request.getFurnitureTypeId() != null) {
-            furniture.setFurnitureTypeId(request.getFurnitureTypeId());
-        }
-        if (request.getMaterialId() != null) {
-            furniture.setMaterialId(request.getMaterialId());
-        }
-        if (request.getColorId() != null) {
-            furniture.setColorId(request.getColorId());
-        }
-        if (request.getCityId() != null) {
-            furniture.setCityId(request.getCityId());
-        }
-        if (request.getCondition() != null) {
-            furniture.setCondition(request.getCondition());
-        }
-        if (request.getStatus() != null) {
-            furniture.setStatus(FurnitureStatus.valueOf(request.getStatus()));
-        }
+
+        if (request.getTitle() != null) furniture.setTitle(request.getTitle());
+        if (request.getDescription() != null) furniture.setDescription(request.getDescription());
+        if (request.getPrice() != null) furniture.setPrice(request.getPrice());
+        if (request.getFurnitureTypeId() != null) furniture.setFurnitureTypeId(request.getFurnitureTypeId());
+        if (request.getMaterialId() != null) furniture.setMaterialId(request.getMaterialId());
+        if (request.getColorId() != null) furniture.setColorId(request.getColorId());
+        if (request.getCityId() != null) furniture.setCityId(request.getCityId());
+        if (request.getCondition() != null) furniture.setCondition(request.getCondition());
+        if (request.getStatus() != null) furniture.setStatus(FurnitureStatus.valueOf(request.getStatus()));
 
         return furnitureRepository.save(furniture);
     }
@@ -110,7 +105,8 @@ public class FurnitureService {
     }
 
     public List<FurnitureDTO> searchFurnitures(String keyword) {
-        return furnitureRepository.searchByTitle(keyword).stream()
+        return furnitureRepository.searchByTitle(keyword)
+                .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -119,12 +115,22 @@ public class FurnitureService {
         String sellerName = furniture.getSeller().getFirstname() + " " +
                 furniture.getSeller().getLastname().charAt(0) + ".";
 
+        List<Image> images = imageRepository.findByFurnitureIdOrderByDisplayOrderAsc(furniture.getId());
+        List<FurnitureDTO.ImageDTO> imageDTOs = images.stream()
+                .map(img -> new FurnitureDTO.ImageDTO(img.getId(), img.getUrl(), img.getName(), img.getIsPrimary()))
+                .collect(Collectors.toList());
+
+        String furnitureTypeName = furnitureTypeRepository.findById(furniture.getFurnitureTypeId())
+                .map(FurnitureType::getName)
+                .orElse("Non spécifié");
+
         return new FurnitureDTO(
                 furniture.getId(),
                 furniture.getTitle(),
                 furniture.getDescription(),
                 furniture.getPrice(),
                 furniture.getFurnitureTypeId(),
+                furnitureTypeName,
                 furniture.getMaterialId(),
                 furniture.getColorId(),
                 furniture.getCityId(),
@@ -133,7 +139,30 @@ public class FurnitureService {
                 furniture.getSeller().getId(),
                 sellerName,
                 furniture.getCreatedAt(),
-                furniture.getUpdatedAt()
+                furniture.getUpdatedAt(),
+                imageDTOs
         );
+    }
+    
+    public Furniture updateFurnitureAsAdmin(Long id, UpdateFurnitureRequest request) {
+        Furniture furniture = findById(id);
+
+        if (request.getStatus() != null) {
+            furniture.setStatus(FurnitureStatus.valueOf(request.getStatus()));
+        }
+
+        return furnitureRepository.save(furniture);
+    }
+
+    public void deleteFurnitureAsAdmin(Long id) {
+        Furniture furniture = findById(id);
+        furnitureRepository.delete(furniture);
+    }
+
+    public List<FurnitureDTO> getAllFurnitures() {
+        return furnitureRepository.findAll()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 }
