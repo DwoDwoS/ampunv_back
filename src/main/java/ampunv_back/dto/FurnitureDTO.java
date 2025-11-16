@@ -2,6 +2,7 @@ package ampunv_back.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class FurnitureDTO {
     private Long id;
@@ -9,30 +10,32 @@ public class FurnitureDTO {
     private String description;
     private BigDecimal price;
     private Integer furnitureTypeId;
+    private String furnitureTypeName;
     private Integer materialId;
     private Integer colorId;
     private Integer cityId;
     private String condition;
     private String status;
-
     private Long sellerId;
     private String sellerName;
-
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private List<ImageDTO> images;
 
-    public FurnitureDTO() {}
+    public FurnitureDTO() {
+    }
 
     public FurnitureDTO(Long id, String title, String description, BigDecimal price,
-                        Integer furnitureTypeId, Integer materialId, Integer colorId,
-                        Integer cityId, String condition, String status,
-                        Long sellerId, String sellerName,
-                        LocalDateTime createdAt, LocalDateTime updatedAt) {
+                        Integer furnitureTypeId, String furnitureTypeName,
+                        Integer materialId, Integer colorId, Integer cityId,
+                        String condition, String status, Long sellerId, String sellerName,
+                        LocalDateTime createdAt, LocalDateTime updatedAt, List<ImageDTO> images) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.price = price;
         this.furnitureTypeId = furnitureTypeId;
+        this.furnitureTypeName = furnitureTypeName;
         this.materialId = materialId;
         this.colorId = colorId;
         this.cityId = cityId;
@@ -42,6 +45,7 @@ public class FurnitureDTO {
         this.sellerName = sellerName;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.images = images;
     }
 
     public Long getId() {
@@ -82,6 +86,14 @@ public class FurnitureDTO {
 
     public void setFurnitureTypeId(Integer furnitureTypeId) {
         this.furnitureTypeId = furnitureTypeId;
+    }
+
+    public String getFurnitureTypeName() {
+        return furnitureTypeName;
+    }
+
+    public void setFurnitureTypeName(String furnitureTypeName) {
+        this.furnitureTypeName = furnitureTypeName;
     }
 
     public Integer getMaterialId() {
@@ -154,5 +166,62 @@ public class FurnitureDTO {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public List<ImageDTO> getImages() {
+        return images;
+    }
+
+    public void setImages(List<ImageDTO> images) {
+        this.images = images;
+    }
+
+    public static class ImageDTO {
+        private Long id;
+        private String url;
+        private String name;
+        private Boolean isPrimary;
+
+        public ImageDTO() {
+        }
+
+        public ImageDTO(Long id, String url, String name, Boolean isPrimary) {
+            this.id = id;
+            this.url = url;
+            this.name = name;
+            this.isPrimary = isPrimary;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public Boolean getIsPrimary() {
+            return isPrimary;
+        }
+
+        public void setIsPrimary(Boolean isPrimary) {
+            this.isPrimary = isPrimary;
+        }
     }
 }
