@@ -5,9 +5,13 @@ import ampunv_back.dto.FurnitureDTO;
 import ampunv_back.dto.UpdateFurnitureRequest;
 import ampunv_back.entity.Furniture;
 import ampunv_back.entity.Furniture.FurnitureStatus;
+import ampunv_back.entity.FurnitureType;
+import ampunv_back.entity.Image;
 import ampunv_back.entity.User;
 import ampunv_back.repository.FurnitureRepository;
 import ampunv_back.repository.UserRepository;
+import ampunv_back.repository.ImageRepository;
+import ampunv_back.repository.FurnitureTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +26,12 @@ public class FurnitureService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ImageRepository imageRepository;
+
+    @Autowired
+    private FurnitureTypeRepository furnitureTypeRepository;
 
     public Furniture createFurniture(CreateFurnitureRequest request, String sellerEmail) {
         User seller = userRepository.findByEmail(sellerEmail)
@@ -43,7 +53,7 @@ public class FurnitureService {
     }
 
     public List<FurnitureDTO> getAllAvailableFurnitures() {
-        return furnitureRepository.findByStatus(FurnitureStatus.PENDING)
+        return furnitureRepository.findByStatus(FurnitureStatus.APPROVED)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -105,12 +115,22 @@ public class FurnitureService {
         String sellerName = furniture.getSeller().getFirstname() + " " +
                 furniture.getSeller().getLastname().charAt(0) + ".";
 
+        List<Image> images = imageRepository.findByFurnitureIdOrderByDisplayOrderAsc(furniture.getId());
+        List<FurnitureDTO.ImageDTO> imageDTOs = images.stream()
+                .map(img -> new FurnitureDTO.ImageDTO(img.getId(), img.getUrl(), img.getName(), img.getIsPrimary()))
+                .collect(Collectors.toList());
+
+        String furnitureTypeName = furnitureTypeRepository.findById(furniture.getFurnitureTypeId())
+                .map(FurnitureType::getName)
+                .orElse("Non spécifié");
+
         return new FurnitureDTO(
                 furniture.getId(),
                 furniture.getTitle(),
                 furniture.getDescription(),
                 furniture.getPrice(),
                 furniture.getFurnitureTypeId(),
+                furnitureTypeName,
                 furniture.getMaterialId(),
                 furniture.getColorId(),
                 furniture.getCityId(),
@@ -119,7 +139,8 @@ public class FurnitureService {
                 furniture.getSeller().getId(),
                 sellerName,
                 furniture.getCreatedAt(),
-                furniture.getUpdatedAt()
+                furniture.getUpdatedAt(),
+                imageDTOs
         );
     }
     

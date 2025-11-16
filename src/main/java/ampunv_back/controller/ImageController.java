@@ -28,6 +28,7 @@ public class ImageController {
             @RequestParam(value = "alt_text", required = false) String altText,
             Authentication authentication
     ) {
+
         try {
             String sellerEmail = authentication.getName();
             Image image = imageService.uploadImage(file, furnitureId, altText, sellerEmail);
@@ -47,6 +48,9 @@ public class ImageController {
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Erreur lors de l'upload : " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Erreur inattendue: " + e.getMessage());
         }
     }
 

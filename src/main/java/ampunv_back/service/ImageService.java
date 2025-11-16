@@ -37,7 +37,6 @@ public class ImageService {
     );
 
     public Image uploadImage(MultipartFile file, Long furnitureId, String altText, String sellerEmail) throws IOException {
-
         if (file.isEmpty()) {
             throw new IllegalArgumentException("Le fichier est vide");
         }
@@ -54,17 +53,14 @@ public class ImageService {
             throw new IllegalArgumentException("Vous n'êtes pas autorisé à uploader des images pour ce meuble");
         }
 
-        Map uploadResult = cloudinary.uploader().upload(
+        Map uploadResult;
+            uploadResult = cloudinary.uploader().upload(
                 file.getBytes(),
                 ObjectUtils.asMap(
                         "folder", folder,
-                        "resource_type", "image",
-                        "transformation", ObjectUtils.asMap(
-                                "quality", "auto",
-                                "fetch_format", "auto"
+                        "resource_type", "image"
                         )
-                )
-        );
+                );
 
         String url = (String) uploadResult.get("secure_url");
         String publicId = (String) uploadResult.get("public_id");
