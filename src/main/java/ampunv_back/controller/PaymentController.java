@@ -29,15 +29,29 @@ public class PaymentController {
     @PostMapping("/create-intent")
     public ResponseEntity<?> createPaymentIntent(
             @RequestParam Long furnitureId,
+            @RequestParam(required = false) String buyerEmail,
             Authentication authentication
     ) {
         try {
-            User buyer = (User) authentication.getPrincipal();
+            User buyer = null;
+            if (authentication != null && authentication.getPrincipal() instanceof User) {
+                buyer = (User) authentication.getPrincipal();
+            } else if (buyerEmail != null && !buyerEmail.isEmpty()) {
+                buyer = new User();
+                buyer.setEmail(buyerEmail);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Email requis pour les achats en tant qu'invité"));
+            }
+
             Map<String, String> response = stripeService.createPaymentIntent(furnitureId, buyer);
             return ResponseEntity.ok(response);
         } catch (StripeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Erreur: " + e.getMessage()));
         }
     }
 
