@@ -56,7 +56,7 @@ public class StripeService {
         if (buyer.getEmail() != null && !buyer.getEmail().isEmpty()) {
             paramsBuilder.setReceiptEmail(buyer.getEmail());
         }
-        
+
         PaymentIntent paymentIntent = PaymentIntent.create(paramsBuilder.build());
 
         if (buyer.getId() != null) {
