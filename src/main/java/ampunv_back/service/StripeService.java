@@ -41,25 +41,35 @@ public class StripeService {
 
         long amountInCents = furniture.getPrice().multiply(BigDecimal.valueOf(100)).longValue();
 
-        PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+        PaymentIntentCreateParams.Builder paramsBuilder = PaymentIntentCreateParams.builder()
                 .setAmount(amountInCents)
                 .setCurrency("eur")
                 .putMetadata("furniture_id", furnitureId.toString())
-                .putMetadata("buyer_id", buyer.getId().toString())
-                .putMetadata("seller_id", furniture.getSeller().getId().toString())
-                .build();
+                .putMetadata("seller_id", furniture.getSeller().getId().toString());
 
-        PaymentIntent paymentIntent = PaymentIntent.create(params);
+        if (buyer.getId() != null) {
+            paramsBuilder.putMetadata("buyer_id", buyer.getId().toString());
+        } else {
+            paramsBuilder.putMetadata("guest_purchase", "true");
+        }
 
-        Payment payment = new Payment();
-        payment.setStripePaymentIntentId(paymentIntent.getId());
-        payment.setFurniture(furniture);
-        payment.setBuyer(buyer);
-        payment.setSeller(furniture.getSeller());
-        payment.setAmount(furniture.getPrice());
-        payment.setCurrency("EUR");
-        payment.setStatus("pending");
-        paymentRepository.save(payment);
+        if (buyer.getEmail() != null && !buyer.getEmail().isEmpty()) {
+            paramsBuilder.setReceiptEmail(buyer.getEmail());
+        }
+
+        PaymentIntent paymentIntent = PaymentIntent.create(paramsBuilder.build());
+
+        if (buyer.getId() != null) {
+            Payment payment = new Payment();
+            payment.setStripePaymentIntentId(paymentIntent.getId());
+            payment.setFurniture(furniture);
+            payment.setBuyer(buyer);
+            payment.setSeller(furniture.getSeller());
+            payment.setAmount(furniture.getPrice());
+            payment.setCurrency("EUR");
+            payment.setStatus("pending");
+            paymentRepository.save(payment);
+        }
 
         Map<String, String> response = new HashMap<>();
         response.put("clientSecret", paymentIntent.getClientSecret());
@@ -70,14 +80,40 @@ public class StripeService {
     @Transactional
     public void handlePaymentSuccess(String paymentIntentId) {
         Payment payment = paymentRepository.findByStripePaymentIntentId(paymentIntentId)
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
+                .orElse(null);
 
-        payment.setStatus("succeeded");
-        paymentRepository.save(payment);
+        if (payment != null) {
+            payment.setStatus("succeeded");
+            paymentRepository.save(payment);
 
-        Furniture furniture = payment.getFurniture();
-        furniture.setStatus(Furniture.FurnitureStatus.SOLD);
-        furnitureRepository.save(furniture);
+            Furniture furniture = payment.getFurniture();
+            furniture.setStatus(Furniture.FurnitureStatus.SOLD);
+            furnitureRepository.save(furniture);
+        } else {
+            try {
+                PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+                Map<String, String> metadata = paymentIntent.getMetadata();
+
+                Long furnitureId = Long.parseLong(metadata.get("furniture_id"));
+                Furniture furniture = furnitureRepository.findById(furnitureId)
+                        .orElseThrow(() -> new RuntimeException("Furniture not found"));
+
+                Payment guestPayment = new Payment();
+                guestPayment.setStripePaymentIntentId(paymentIntentId);
+                guestPayment.setFurniture(furniture);
+                guestPayment.setBuyer(null);
+                guestPayment.setSeller(furniture.getSeller());
+                guestPayment.setAmount(furniture.getPrice());
+                guestPayment.setCurrency("EUR");
+                guestPayment.setStatus("succeeded");
+                paymentRepository.save(guestPayment);
+                furniture.setStatus(Furniture.FurnitureStatus.SOLD);
+                furnitureRepository.save(furniture);
+
+            } catch (StripeException e) {
+                throw new RuntimeException("Error retrieving payment intent: " + e.getMessage());
+            }
+        }
     }
 
     @Transactional
