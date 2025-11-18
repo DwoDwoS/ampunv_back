@@ -30,6 +30,13 @@ public class FurnitureController {
         return ResponseEntity.ok(furnitures);
     }
 
+    @GetMapping("/api/admin/furnitures")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<FurnitureDTO>> getAllFurnituresForAdmin() {
+        List<FurnitureDTO> furnitures = furnitureService.getAllFurnitures();
+        return ResponseEntity.ok(furnitures);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<FurnitureDTO> getFurnitureById(@PathVariable Long id) {
         Furniture furniture = furnitureService.findById(id);
@@ -102,7 +109,7 @@ public class FurnitureController {
         try {
             Furniture furniture = furnitureService.findById(id);
             UpdateFurnitureRequest updateRequest = new UpdateFurnitureRequest();
-            updateRequest.setStatus("AVAILABLE");
+            updateRequest.setStatus("APPROVED");
 
             Furniture updated = furnitureService.updateFurnitureAsAdmin(id, updateRequest);
             FurnitureDTO dto = furnitureService.convertToDTO(updated);
