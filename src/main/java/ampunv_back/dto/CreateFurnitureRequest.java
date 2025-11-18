@@ -28,7 +28,7 @@ public class CreateFurnitureRequest {
     private Integer cityId;
 
     @NotBlank(message = "L'état est obligatoire")
-    @Pattern(regexp = "^(Neuf|Très bon état|Bon état|État correct|À restaurer)$",
+    @Pattern(regexp = "^(Neuf|Très bon état|Bon état|État correct|À rénover)$",
             message = "État invalide")
     private String condition;
 

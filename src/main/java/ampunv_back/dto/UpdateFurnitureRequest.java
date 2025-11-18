@@ -23,7 +23,7 @@ public class UpdateFurnitureRequest {
 
     private Integer cityId;
 
-    @Pattern(regexp = "^(Neuf|Très bon état|Bon état|État correct|À restaurer)$",
+    @Pattern(regexp = "^(Neuf|Très bon état|Bon état|État correct|À rénover)$",
             message = "État invalide")
     private String condition;
 
