@@ -53,6 +53,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/furnitures/**").hasAnyRole("SELLER", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/furnitures/**").hasAnyRole("SELLER", "ADMIN")
 
+                        .requestMatchers("/api/users/myprofile", "/api/users/myprofile/**").authenticated()
+
                         .requestMatchers("/api/images/upload").hasAnyRole("SELLER", "ADMIN")
 
                         .requestMatchers("/api/admin/**", "/api/users/**").hasRole("ADMIN")

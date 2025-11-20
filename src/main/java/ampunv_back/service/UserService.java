@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,7 +36,7 @@ public class UserService {
 
         User user = new User();
         user.setFirstname(request.getFirstname());
-        user.setLastname((String) request.getLastname());
+        user.setLastname(request.getLastname());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setCity(city);
@@ -44,18 +45,17 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User findByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé avec l'email : " + email));
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
-    public User findById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé avec l'ID : " + id));
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
     }
 
     public void promoteToAdmin(Long userId) {
-        User user = findById(userId);
+        User user = findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
         user.setRole(User.UserRole.ADMIN);
         userRepository.save(user);
     }
@@ -84,7 +84,9 @@ public class UserService {
     }
 
     public void demoteToSeller(Long userId) {
-        User user = findById(userId);
+        User user = findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
+
         if (user.getRole() == User.UserRole.ADMIN) {
             long adminCount = userRepository.countByRole(User.UserRole.ADMIN);
             if (adminCount <= 1) {
@@ -94,5 +96,13 @@ public class UserService {
 
         user.setRole(User.UserRole.SELLER);
         userRepository.save(user);
+    }
+
+    public User save(User user) {
+        return userRepository.save(user);
+    }
+
+    public void delete(User user) {
+        userRepository.delete(user);
     }
 }
