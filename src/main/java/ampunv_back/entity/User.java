@@ -1,6 +1,7 @@
 package ampunv_back.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
@@ -111,6 +112,9 @@ public class User {
 
     public Integer getCityId() {
         return city != null ? city.getId() : null;
+    }
+
+    public void setCityId (@NotNull(message = "La ville est obligatoire") Long cityId) {
     }
 
     public UserRole getRole() {

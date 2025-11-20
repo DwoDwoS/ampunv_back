@@ -14,6 +14,7 @@ import ampunv_back.repository.ImageRepository;
 import ampunv_back.repository.FurnitureTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -164,5 +165,11 @@ public class FurnitureService {
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteAllByUser(User user) {
+        List<Furniture> userFurnitures = furnitureRepository.findBySeller_Id(user.getId());
+        furnitureRepository.deleteAll(userFurnitures);
     }
 }

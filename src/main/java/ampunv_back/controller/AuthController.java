@@ -70,7 +70,8 @@ public class AuthController {
                     )
             );
 
-            User user = userService.findByEmail(request.getEmail());
+            User user = userService.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
 
             String token = jwtService.generateToken(
                     user.getEmail(),
