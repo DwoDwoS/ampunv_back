@@ -3,16 +3,11 @@ package ampunv_back.service;
 import ampunv_back.dto.CreateFurnitureRequest;
 import ampunv_back.dto.FurnitureDTO;
 import ampunv_back.dto.UpdateFurnitureRequest;
-import ampunv_back.entity.Furniture;
+import ampunv_back.entity.*;
 import ampunv_back.entity.Furniture.FurnitureStatus;
-import ampunv_back.entity.FurnitureType;
-import ampunv_back.entity.Image;
-import ampunv_back.entity.User;
-import ampunv_back.repository.FurnitureRepository;
-import ampunv_back.repository.UserRepository;
-import ampunv_back.repository.ImageRepository;
-import ampunv_back.repository.FurnitureTypeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import ampunv_back.repository.*;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,17 +17,23 @@ import java.util.stream.Collectors;
 @Service
 public class FurnitureService {
 
-    @Autowired
-    private FurnitureRepository furnitureRepository;
+    private final FurnitureRepository furnitureRepository;
+    private final UserRepository userRepository;
+    private final ImageRepository imageRepository;
+    private final FurnitureTypeRepository furnitureTypeRepository;
+    private final RejectionLogRepository rejectionLogRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private ImageRepository imageRepository;
-
-    @Autowired
-    private FurnitureTypeRepository furnitureTypeRepository;
+    public FurnitureService(FurnitureRepository furnitureRepository,
+                            UserRepository userRepository,
+                            ImageRepository imageRepository,
+                            FurnitureTypeRepository furnitureTypeRepository,
+                            RejectionLogRepository rejectionLogRepository) {
+        this.furnitureRepository = furnitureRepository;
+        this.userRepository = userRepository;
+        this.imageRepository = imageRepository;
+        this.furnitureTypeRepository = furnitureTypeRepository;
+        this.rejectionLogRepository = rejectionLogRepository;
+    }
 
     public Furniture createFurniture(CreateFurnitureRequest request, String sellerEmail) {
         User seller = userRepository.findByEmail(sellerEmail)
@@ -60,6 +61,13 @@ public class FurnitureService {
                 .collect(Collectors.toList());
     }
 
+    public List<FurnitureDTO> getAllFurnitures() {
+        return furnitureRepository.findAll()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     public Furniture findById(Long id) {
         return furnitureRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Meuble non trouvé avec l'ID : " + id));
@@ -70,6 +78,13 @@ public class FurnitureService {
                 .orElseThrow(() -> new IllegalArgumentException("Vendeur non trouvé"));
 
         return furnitureRepository.findBySeller_Id(seller.getId())
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<FurnitureDTO> searchFurnitures(String keyword) {
+        return furnitureRepository.searchByTitle(keyword)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -95,6 +110,36 @@ public class FurnitureService {
         return furnitureRepository.save(furniture);
     }
 
+    @Transactional
+    public Furniture updateFurnitureAsAdmin(Long id, UpdateFurnitureRequest request) {
+        Furniture furniture = findById(id);
+
+        if (request.getStatus() != null) {
+            FurnitureStatus newStatus = FurnitureStatus.valueOf(request.getStatus());
+
+            if (newStatus == FurnitureStatus.REJECTED) {
+                String adminEmail = getCurrentAdminEmail();
+                furniture.setRejectionReason(request.getRejectionReason());
+                createRejectionLog(furniture, request.getRejectionReason(), adminEmail);
+            }
+
+            furniture.setStatus(newStatus);
+        }
+
+        return furnitureRepository.save(furniture);
+    }
+
+    private String getCurrentAdminEmail() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof UserDetails userDetails) {
+            return userDetails.getUsername();
+        } else if (principal instanceof String username) {
+            return username;
+        } else {
+            throw new IllegalStateException("Impossible de récupérer l'admin connecté");
+        }
+    }
+
     public void deleteFurniture(Long id, String sellerEmail) {
         Furniture furniture = findById(id);
 
@@ -105,11 +150,15 @@ public class FurnitureService {
         furnitureRepository.delete(furniture);
     }
 
-    public List<FurnitureDTO> searchFurnitures(String keyword) {
-        return furnitureRepository.searchByTitle(keyword)
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    public void deleteFurnitureAsAdmin(Long id) {
+        Furniture furniture = findById(id);
+        furnitureRepository.delete(furniture);
+    }
+
+    @Transactional
+    public void deleteAllByUser(User user) {
+        List<Furniture> userFurnitures = furnitureRepository.findBySeller_Id(user.getId());
+        furnitureRepository.deleteAll(userFurnitures);
     }
 
     public FurnitureDTO convertToDTO(Furniture furniture) {
@@ -125,7 +174,15 @@ public class FurnitureService {
                 .map(FurnitureType::getName)
                 .orElse("Non spécifié");
 
-        return new FurnitureDTO(
+        String lastRejectionReason = null;
+        if (furniture.getStatus() == FurnitureStatus.REJECTED) {
+            lastRejectionReason = rejectionLogRepository
+                    .findFirstByFurnitureIdOrderByRejectedAtDesc(furniture.getId())
+                    .map(RejectionLog::getReason)
+                    .orElse(null);
+        }
+
+        FurnitureDTO dto = new FurnitureDTO(
                 furniture.getId(),
                 furniture.getTitle(),
                 furniture.getDescription(),
@@ -143,33 +200,22 @@ public class FurnitureService {
                 furniture.getUpdatedAt(),
                 imageDTOs
         );
-    }
-    
-    public Furniture updateFurnitureAsAdmin(Long id, UpdateFurnitureRequest request) {
-        Furniture furniture = findById(id);
+        dto.setRejectionReason(lastRejectionReason);
 
-        if (request.getStatus() != null) {
-            furniture.setStatus(FurnitureStatus.valueOf(request.getStatus()));
-        }
-
-        return furnitureRepository.save(furniture);
+        return dto;
     }
 
-    public void deleteFurnitureAsAdmin(Long id) {
-        Furniture furniture = findById(id);
-        furnitureRepository.delete(furniture);
-    }
+    public void createRejectionLog(Furniture furniture, String reason, String adminEmail) {
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Admin non trouvé"));
 
-    public List<FurnitureDTO> getAllFurnitures() {
-        return furnitureRepository.findAll()
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
+        RejectionLog log = new RejectionLog();
+        log.setFurnitureId(furniture.getId());
+        log.setFurnitureTitle(furniture.getTitle());
+        log.setSellerId(furniture.getSeller().getId());
+        log.setAdminId(admin.getId());
+        log.setReason(reason);
 
-    @Transactional
-    public void deleteAllByUser(User user) {
-        List<Furniture> userFurnitures = furnitureRepository.findBySeller_Id(user.getId());
-        furnitureRepository.deleteAll(userFurnitures);
+        rejectionLogRepository.save(log);
     }
 }
