@@ -134,7 +134,7 @@ public class UserController {
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             furnitureService.deleteAllByUser(user);
-            userService.delete(user);
+            userService.deleteUser(user.getId());
 
             return ResponseEntity.ok(Map.of("message", "Compte supprimé avec succès"));
 
@@ -142,6 +142,13 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')") // Seulement les admins peuvent supprimer
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
