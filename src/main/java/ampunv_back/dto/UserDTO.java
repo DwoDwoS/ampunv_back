@@ -1,5 +1,7 @@
 package ampunv_back.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.LocalDateTime;
 
 public class UserDTO {
@@ -12,17 +14,22 @@ public class UserDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    @JsonProperty("isOriginalAdmin")
+    private boolean isOriginalAdmin;
+
     public UserDTO() {}
 
-    public UserDTO(Long id, String firstname, String lastname, String email, Integer cityId, String role, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.firstname = firstname;
-        this.lastname = lastname;
-        this.email = email;
-        this.cityId = cityId;
-        this.role = role;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        public UserDTO(Long id, String firstname, String lastname, String email, Integer cityId, String role, LocalDateTime createdAt, LocalDateTime updatedAt, Boolean isOriginalAdmin) {
+            this.id = id;
+            this.firstname = firstname;
+            this.lastname = lastname;
+            this.email = email;
+            this.cityId = cityId;
+            this.role = role;
+            this.createdAt = createdAt;
+            this.updatedAt = updatedAt;
+            this.isOriginalAdmin = isOriginalAdmin;
+
     }
 
     public Long getId() {
@@ -88,4 +95,13 @@ public class UserDTO {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public boolean isOriginalAdmin() {
+        return isOriginalAdmin;
+    }
+
+    public void setOriginalAdmin(boolean originalAdmin) {
+        isOriginalAdmin = originalAdmin;
+    }
+
 }

@@ -41,6 +41,9 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "is_original_admin")
+    private Boolean isOriginalAdmin = false;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -136,5 +139,13 @@ public class User {
     public enum UserRole {
         SELLER,
         ADMIN
+    }
+
+    public Boolean getIsOriginalAdmin() {
+        return isOriginalAdmin;
+    }
+
+    public void setIsOriginalAdmin(Boolean isOriginalAdmin) {
+        this.isOriginalAdmin = isOriginalAdmin;
     }
 }

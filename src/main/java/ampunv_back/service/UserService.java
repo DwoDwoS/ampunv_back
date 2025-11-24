@@ -9,6 +9,7 @@ import ampunv_back.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +17,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class UserService {
+
+    private static final long ORIGINAL_ADMIN_ID = 1L;
 
     @Autowired
     private UserRepository userRepository;
@@ -31,7 +34,7 @@ public class UserService {
             throw new IllegalArgumentException("Cet email est déjà utilisé");
         }
 
-        City city = cityRepository.findById((Integer) request.getCityId())
+        City city = cityRepository.findById(request.getCityId())
                 .orElseThrow(() -> new IllegalArgumentException("Ville introuvable avec l'ID : " + request.getCityId()));
 
         User user = new User();
@@ -56,7 +59,28 @@ public class UserService {
     public void promoteToAdmin(Long userId) {
         User user = findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
+
+        if (user.getId() == ORIGINAL_ADMIN_ID) {
+            throw new IllegalStateException("L'administrateur originel ne peut pas être modifié");
+        }
+
         user.setRole(User.UserRole.ADMIN);
+        userRepository.save(user);
+    }
+
+    public void demoteToSeller(Long userId) {
+        User user = findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
+
+        if (user.getId() == ORIGINAL_ADMIN_ID) {
+            throw new IllegalStateException("L'administrateur originel ne peut pas être rétrogradé");
+        }
+
+        if (user.getRole() != User.UserRole.ADMIN) {
+            throw new IllegalStateException("Cet utilisateur n'est pas un administrateur");
+        }
+
+        user.setRole(User.UserRole.SELLER);
         userRepository.save(user);
     }
 
@@ -75,7 +99,8 @@ public class UserService {
                 user.getCityId(),
                 user.getRole().name(),
                 user.getCreatedAt(),
-                user.getUpdatedAt()
+                user.getUpdatedAt(),
+                user.getId() == ORIGINAL_ADMIN_ID
         );
     }
 
@@ -83,26 +108,19 @@ public class UserService {
         return userRepository.existsByEmail(email);
     }
 
-    public void demoteToSeller(Long userId) {
-        User user = findById(userId)
+    @Transactional
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
 
-        if (user.getRole() == User.UserRole.ADMIN) {
-            long adminCount = userRepository.countByRole(User.UserRole.ADMIN);
-            if (adminCount <= 1) {
-                throw new IllegalArgumentException("Impossible de rétrograder le dernier administrateur");
-            }
+        if (user.getId() == ORIGINAL_ADMIN_ID) {
+            throw new IllegalStateException("L'administrateur originel ne peut pas être supprimé");
         }
 
-        user.setRole(User.UserRole.SELLER);
-        userRepository.save(user);
+        userRepository.delete(user);
     }
 
     public User save(User user) {
         return userRepository.save(user);
-    }
-
-    public void delete(User user) {
-        userRepository.delete(user);
     }
 }
