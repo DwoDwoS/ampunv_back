@@ -89,6 +89,7 @@ public class StripeService {
             Furniture furniture = payment.getFurniture();
             furniture.setStatus(Furniture.FurnitureStatus.SOLD);
             furnitureRepository.save(furniture);
+            int deletedItems = cartItemRepository.deleteByFurnitureId(furnitureId);
         } else {
             try {
                 PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
@@ -109,7 +110,6 @@ public class StripeService {
                 paymentRepository.save(guestPayment);
                 furniture.setStatus(Furniture.FurnitureStatus.SOLD);
                 furnitureRepository.save(furniture);
-
             } catch (StripeException e) {
                 throw new RuntimeException("Error retrieving payment intent: " + e.getMessage());
             }
