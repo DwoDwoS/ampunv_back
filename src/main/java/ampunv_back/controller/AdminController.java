@@ -20,7 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
-@CrossOrigin(origins = "https://ampunv.vercel.app/")
+@CrossOrigin(origins = "https://ampunv.vercel.app")
 public class AdminController {
 
     @Autowired

@@ -18,7 +18,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reference-data")
-@CrossOrigin(origins = "https://ampunv.vercel.app/")
+@CrossOrigin(origins = "https://ampunv.vercel.app")
 public class ReferenceDataController {
 
     @Autowired

@@ -24,7 +24,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "https://ampunv.vercel.app/")
+@CrossOrigin(origins = "https://ampunv.vercel.app")
 public class UserController {
 
     @Autowired

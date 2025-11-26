@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/images")
-@CrossOrigin(origins = "https://ampunv.vercel.app/")
+@CrossOrigin(origins = "https://ampunv.vercel.app")
 public class ImageController {
 
     @Autowired
