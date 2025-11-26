@@ -21,6 +21,7 @@ public class FurnitureDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<ImageDTO> images;
+    private String rejectionReason;
 
     public FurnitureDTO() {
     }
@@ -174,6 +175,14 @@ public class FurnitureDTO {
 
     public void setImages(List<ImageDTO> images) {
         this.images = images;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
     }
 
     public static class ImageDTO {

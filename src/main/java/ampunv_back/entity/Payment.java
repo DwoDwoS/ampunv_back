@@ -29,7 +29,7 @@ public class Payment {
     private Furniture furniture;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "buyer_id", nullable = false)
+    @JoinColumn(name = "buyer_id")
     private User buyer;
 
     @ManyToOne(fetch = FetchType.LAZY)

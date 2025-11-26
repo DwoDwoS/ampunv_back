@@ -1,6 +1,7 @@
 package ampunv_back.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
@@ -39,6 +40,9 @@ public class User {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "is_original_admin")
+    private Boolean isOriginalAdmin = false;
 
     @PrePersist
     protected void onCreate() {
@@ -113,6 +117,9 @@ public class User {
         return city != null ? city.getId() : null;
     }
 
+    public void setCityId (@NotNull(message = "La ville est obligatoire") Long cityId) {
+    }
+
     public UserRole getRole() {
         return role;
     }
@@ -132,5 +139,13 @@ public class User {
     public enum UserRole {
         SELLER,
         ADMIN
+    }
+
+    public Boolean getIsOriginalAdmin() {
+        return isOriginalAdmin;
+    }
+
+    public void setIsOriginalAdmin(Boolean isOriginalAdmin) {
+        this.isOriginalAdmin = isOriginalAdmin;
     }
 }
