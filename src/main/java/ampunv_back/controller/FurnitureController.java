@@ -18,7 +18,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/furnitures")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "https://ampunv.vercel.app/")
 public class FurnitureController {
 
     @Autowired
