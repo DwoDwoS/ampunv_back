@@ -30,6 +30,17 @@ public class UpdateFurnitureRequest {
     @Pattern(regexp = "^(PENDING|APPROVED|REJECTED|SOLD)$", message = "Statut invalide")
     private String status;
 
+    @Size(max = 500, message = "Le motif de rejet ne peut pas dépasser 500 caractères")
+    private String rejectionReason;
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
+    }
+
     public UpdateFurnitureRequest() {}
 
     public String getTitle() {

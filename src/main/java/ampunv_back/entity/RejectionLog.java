@@ -31,7 +31,7 @@ public class RejectionLog {
     @Column(name = "admin_id", nullable = false)
     private Long adminId;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = true, columnDefinition = "TEXT")
     private String reason;
 
     @CreationTimestamp
