@@ -22,6 +22,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
+@CrossOrigin(origins = {"https://ampunv.vercel.app", "https://stripe.com"})
 public class PaymentController {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentController.class);
